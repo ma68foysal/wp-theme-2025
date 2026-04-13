@@ -252,6 +252,51 @@
 	}
 
 	// ============================================
+	// Horizontal Content Row Scrolling
+	// ============================================
+	function initializeContentRowScroll() {
+		const contentRows = document.querySelectorAll('.bantu-content-row');
+		if (contentRows.length === 0) return;
+
+		contentRows.forEach(row => {
+			// Add keyboard support for horizontal scrolling
+			row.addEventListener('keydown', function(e) {
+				if (e.key === 'ArrowLeft') {
+					this.scrollBy({ left: -250, behavior: 'smooth' });
+				} else if (e.key === 'ArrowRight') {
+					this.scrollBy({ left: 250, behavior: 'smooth' });
+				}
+			});
+
+			// Add scroll indicators
+			const scrollIndicator = document.createElement('div');
+			scrollIndicator.className = 'bantu-scroll-indicator';
+			scrollIndicator.style.cssText = `
+				position: absolute;
+				top: 50%;
+				right: 0;
+				z-index: 10;
+				background: rgba(229, 9, 20, 0.7);
+				color: white;
+				padding: 1rem;
+				border-radius: 4px 0 0 4px;
+				cursor: pointer;
+				transition: background 0.3s ease;
+			`;
+			scrollIndicator.innerHTML = '→';
+			scrollIndicator.addEventListener('click', function() {
+				row.scrollBy({ left: 300, behavior: 'smooth' });
+			});
+			scrollIndicator.addEventListener('mouseover', function() {
+				this.style.backgroundColor = 'rgba(229, 9, 20, 1)';
+			});
+			scrollIndicator.addEventListener('mouseout', function() {
+				this.style.backgroundColor = 'rgba(229, 9, 20, 0.7)';
+			});
+		});
+	}
+
+	// ============================================
 	// Initialize Everything on Document Ready
 	// ============================================
 	function initialize() {
@@ -280,6 +325,7 @@
 		initializeFormHandlers();
 		initializeMobileMenu();
 		initializeSearch();
+		initializeContentRowScroll();
 
 		console.log('[BANTU Plus] Initialization complete');
 	}

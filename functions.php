@@ -13,10 +13,31 @@
 // BANTU PLUS CUSTOM FUNCTIONALITY
 // ============================================
 
+// ============================================
+// DISABLE THEME UPDATES & PROTECTION
+// ============================================
+
+// Disable automatic theme updates
+add_filter( 'auto_update_theme', '__return_false' );
+
+// Remove theme update notifications
+add_filter( 'transient_update_themes', '__return_null' );
+add_filter( 'transient_update_themes_alt', '__return_null' );
+
+// Disable WordPress.org theme directory sync
+remove_action( 'admin_init', 'wp_update_themes' );
+remove_action( 'init', 'wp_update_themes' );
+
+// Disable theme edit screen (prevent accidental modifications)
+if ( ! defined( 'DISALLOW_FILE_EDIT' ) ) {
+	define( 'DISALLOW_FILE_EDIT', true );
+}
+
 // Include admin functionality
 if ( is_admin() ) {
 	require_once get_template_directory() . '/inc/admin-video-upload.php';
 	require_once get_template_directory() . '/inc/bunny-settings.php';
+	require_once get_template_directory() . '/inc/watermark-settings.php';
 }
 
 // Include membership and auth functionality
@@ -24,6 +45,7 @@ require_once get_template_directory() . '/inc/membership-database.php';
 require_once get_template_directory() . '/inc/auth-shortcodes.php';
 require_once get_template_directory() . '/inc/stripe-payments.php';
 require_once get_template_directory() . '/inc/rest-api.php';
+require_once get_template_directory() . '/inc/watermark-protection.php';
 
 // Register custom post types for BANTU PLUS
 if ( ! function_exists( 'bantu_register_post_types' ) ) :

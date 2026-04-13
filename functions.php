@@ -63,6 +63,39 @@ if ( ! function_exists( 'bantu_register_post_types' ) ) :
 endif;
 add_action( 'init', 'bantu_register_post_types' );
 
+// Register navigation menus
+if ( ! function_exists( 'bantu_register_nav_menus' ) ) :
+	/**
+	 * Register navigation menus
+	 *
+	 * @return void
+	 */
+	function bantu_register_nav_menus() {
+		register_nav_menus( array(
+			'primary' => esc_html__( 'Primary Menu', 'bantu-plus' ),
+		) );
+	}
+endif;
+add_action( 'after_setup_theme', 'bantu_register_nav_menus' );
+
+// Default fallback navigation menu
+if ( ! function_exists( 'bantu_default_nav_menu' ) ) :
+	/**
+	 * Default fallback navigation menu if none is assigned
+	 *
+	 * @return void
+	 */
+	function bantu_default_nav_menu() {
+		echo '<ul class="bantu-nav-menu">';
+		echo '<li><a href="' . esc_url( home_url( '/' ) ) . '">Home</a></li>';
+		echo '<li><a href="' . esc_url( home_url( '/videos' ) ) . '">Browse</a></li>';
+		if ( is_user_logged_in() ) {
+			echo '<li><a href="' . esc_url( home_url( '/dashboard' ) ) . '">My Dashboard</a></li>';
+		}
+		echo '</ul>';
+	}
+endif;
+
 // Adds theme support for post formats.
 if ( ! function_exists( 'twentytwentyfive_post_format_setup' ) ) :
 	/**
@@ -364,3 +397,82 @@ if ( ! function_exists( 'bantu_search_videos_callback' ) ) :
 endif;
 add_action( 'wp_ajax_bantu_search_videos', 'bantu_search_videos_callback' );
 add_action( 'wp_ajax_nopriv_bantu_search_videos', 'bantu_search_videos_callback' );
+
+// AJAX: Record watch history
+if ( ! function_exists( 'bantu_record_watch_callback' ) ) :
+	/**
+	 * AJAX callback to record video watch
+	 *
+	 * @return void
+	 */
+	function bantu_record_watch_callback() {
+		check_ajax_referer( 'bantu_security_nonce', 'nonce' );
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'User not logged in' );
+		}
+
+		$user_id  = get_current_user_id();
+		$video_id = isset( $_POST['video_id'] ) ? intval( $_POST['video_id'] ) : 0;
+
+		if ( ! $video_id ) {
+			wp_send_json_error( 'Invalid video ID' );
+		}
+
+		// Get existing history
+		$history = get_user_meta( $user_id, 'bantu_video_history', true ) ?: array();
+
+		// Add/update video watch timestamp
+		$history[ $video_id ] = current_time( 'timestamp' );
+
+		// Keep only last 100 watched videos
+		if ( count( $history ) > 100 ) {
+			asort( $history );
+			$history = array_slice( $history, -100 );
+		}
+
+		// Save updated history
+		update_user_meta( $user_id, 'bantu_video_history', $history );
+
+		wp_send_json_success( array( 'message' => 'Watch recorded' ) );
+	}
+endif;
+add_action( 'wp_ajax_bantu_record_watch', 'bantu_record_watch_callback' );
+
+// AJAX: Add/Remove favorite
+if ( ! function_exists( 'bantu_remove_favorite_callback' ) ) :
+	/**
+	 * AJAX callback to remove from favorites
+	 *
+	 * @return void
+	 */
+	function bantu_remove_favorite_callback() {
+		check_ajax_referer( 'bantu_security_nonce', 'nonce' );
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'User not logged in' );
+		}
+
+		$user_id  = get_current_user_id();
+		$video_id = isset( $_POST['video_id'] ) ? intval( $_POST['video_id'] ) : 0;
+
+		if ( ! $video_id ) {
+			wp_send_json_error( 'Invalid video ID' );
+		}
+
+		// Get existing favorites
+		$favorites = get_user_meta( $user_id, 'bantu_favorites', true ) ?: array();
+
+		// Remove from favorites
+		if ( in_array( $video_id, $favorites, true ) ) {
+			$favorites = array_filter( $favorites, function( $id ) use ( $video_id ) {
+				return $id !== $video_id;
+			} );
+			update_user_meta( $user_id, 'bantu_favorites', $favorites );
+			wp_send_json_success( array( 'message' => 'Removed from favorites' ) );
+		} else {
+			wp_send_json_error( 'Video not in favorites' );
+		}
+	}
+endif;
+add_action( 'wp_ajax_bantu_remove_favorite', 'bantu_remove_favorite_callback' );

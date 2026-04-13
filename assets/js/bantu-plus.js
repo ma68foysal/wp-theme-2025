@@ -9,6 +9,173 @@
 	console.log('[BANTU Plus] Initializing platform...');
 
 	// ============================================
+	// Search & Filter Functionality
+	// ============================================
+	function initializeSearch() {
+		const searchInput = document.getElementById('bantu-search-input');
+		const searchResults = document.getElementById('bantu-search-results');
+
+		if (!searchInput) return;
+
+		let searchTimeout;
+		searchInput.addEventListener('input', function() {
+			clearTimeout(searchTimeout);
+			const query = this.value.trim();
+
+			if (query.length < 2) {
+				searchResults.style.display = 'none';
+				return;
+			}
+
+			searchTimeout = setTimeout(() => {
+				fetch(bantuAjax.ajaxUrl, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+					body: 'action=bantu_search_videos&nonce=' + bantuAjax.nonce + '&query=' + encodeURIComponent(query),
+				})
+				.then(res => res.json())
+				.then(data => {
+					if (data.success) {
+						const results = data.data;
+						searchResults.innerHTML = results.map(video => `
+							<div class="bantu-search-result-item">
+								<img src="${video.thumbnail}" alt="${video.title}">
+								<div style="flex: 1;">
+									<a href="${video.url}" style="color: white; display: block; font-weight: 600;">${video.title}</a>
+									<small style="color: #b3b3b3;">${video.duration} min</small>
+								</div>
+							</div>
+						`).join('');
+						searchResults.style.display = 'block';
+					}
+				})
+				.catch(err => console.error('[BANTU Plus] Search error:', err));
+			}, 300);
+		});
+
+		// Close search results when clicking outside
+		document.addEventListener('click', function(e) {
+			if (!e.target.closest('.bantu-search-wrapper')) {
+				searchResults.style.display = 'none';
+			}
+		});
+	}
+
+	// ============================================
+	// Category & Sort Filtering
+	// ============================================
+	function initializeFilters() {
+		const categoryFilter = document.getElementById('bantu-category-filter');
+		const sortFilter = document.getElementById('bantu-sort-filter');
+		const categoryPills = document.querySelectorAll('.bantu-pill');
+
+		function applyFilters() {
+			const category = categoryFilter?.value || '';
+			const sort = sortFilter?.value || 'latest';
+			
+			// Build URL with filters
+			const url = new URL(window.location);
+			if (category) {
+				url.searchParams.set('category', category);
+			} else {
+				url.searchParams.delete('category');
+			}
+			url.searchParams.set('sort', sort);
+			
+			// Scroll to video grid
+			const grid = document.getElementById('bantu-video-grid');
+			if (grid) {
+				grid.scrollIntoView({ behavior: 'smooth' });
+			}
+		}
+
+		if (categoryFilter) {
+			categoryFilter.addEventListener('change', applyFilters);
+		}
+
+		if (sortFilter) {
+			sortFilter.addEventListener('change', applyFilters);
+		}
+
+		// Category pill clicks
+		categoryPills.forEach(pill => {
+			pill.addEventListener('click', function() {
+				categoryPills.forEach(p => p.classList.remove('active'));
+				this.classList.add('active');
+				const category = this.dataset.category;
+				if (categoryFilter) {
+					categoryFilter.value = category;
+				}
+				applyFilters();
+			});
+		});
+	}
+
+	// ============================================
+	// Video Progress Tracking
+	// ============================================
+	function trackVideoProgress(videoId, videoElement) {
+		if (!videoElement || !videoId) return;
+
+		let saveTimeout;
+		videoElement.addEventListener('timeupdate', function() {
+			clearTimeout(saveTimeout);
+			saveTimeout = setTimeout(() => {
+				const progress = (this.currentTime / this.duration) * 100;
+				
+				// Save to localStorage temporarily (will sync to server)
+				localStorage.setItem(`bantu_progress_${videoId}`, JSON.stringify({
+					currentTime: this.currentTime,
+					duration: this.duration,
+					percentage: Math.round(progress),
+				}));
+			}, 2000);
+		});
+
+		// When video ends, record to history
+		videoElement.addEventListener('ended', function() {
+			fetch(bantuAjax.ajaxUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: 'action=bantu_record_watch&nonce=' + bantuAjax.nonce + '&video_id=' + videoId,
+			});
+		});
+	}
+
+	// ============================================
+	// Add to Favorites
+	// ============================================
+	function initializeFavorites() {
+		document.addEventListener('click', function(e) {
+			if (e.target.classList.contains('bantu-remove-favorite')) {
+				e.preventDefault();
+				const videoId = e.target.dataset.videoId;
+				
+				fetch(bantuAjax.ajaxUrl, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+					body: 'action=bantu_remove_favorite&nonce=' + bantuAjax.nonce + '&video_id=' + videoId,
+				})
+				.then(res => res.json())
+				.then(data => {
+					if (data.success) {
+						e.target.closest('.bantu-video-card').style.opacity = '0.5';
+						setTimeout(() => {
+							e.target.closest('.bantu-video-card').remove();
+						}, 300);
+					}
+				});
+			}
+		});
+	}
+
+	// ============================================
 	// HLS Player Initialization
 	// ============================================
 	function initializeHLSPlayer(containerId, hlsUrl) {
@@ -315,19 +482,59 @@
 			if (hlsUrl) {
 				initializeHLSPlayer('bantu-player-container', hlsUrl);
 				if (videoId) {
-					initializeProgressTracking(videoId);
+					const video = document.getElementById('bantu-player');
+					if (video) {
+						trackVideoProgress(videoId, video);
+					}
 				}
 			}
 		}
+
+		// Initialize search and filters
+		initializeSearch();
+		initializeFilters();
+		initializeFavorites();
 
 		// Initialize other components
 		initializeVideoGrid();
 		initializeFormHandlers();
 		initializeMobileMenu();
-		initializeSearch();
 		initializeContentRowScroll();
 
 		console.log('[BANTU Plus] Initialization complete');
+	}
+
+	// ============================================
+	// Header User Menu Toggle
+	// ============================================
+	function initializeUserMenu() {
+		const menuToggle = document.querySelector('.bantu-user-menu-toggle');
+		const menuDropdown = document.querySelector('.bantu-user-menu-dropdown');
+
+		if (!menuToggle || !menuDropdown) return;
+
+		menuToggle.addEventListener('click', function(e) {
+			e.stopPropagation();
+			const isOpen = menuDropdown.style.display !== 'none';
+			menuDropdown.style.display = isOpen ? 'none' : 'block';
+			this.setAttribute('aria-expanded', !isOpen);
+		});
+
+		// Close menu when clicking outside
+		document.addEventListener('click', function(e) {
+			if (!e.target.closest('.bantu-user-menu-wrapper')) {
+				menuDropdown.style.display = 'none';
+				menuToggle.setAttribute('aria-expanded', 'false');
+			}
+		});
+
+		// Close menu on Escape key
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape') {
+				menuDropdown.style.display = 'none';
+				menuToggle.setAttribute('aria-expanded', 'false');
+			}
+		});
 	}
 
 	// Wait for DOM to be fully loaded
@@ -337,10 +544,16 @@
 		initialize();
 	}
 
+	// Initialize header interactions after setup
+	setTimeout(() => {
+		initializeUserMenu();
+	}, 100);
+
 	// Expose public API
 	window.bantuPlus = {
 		initializePlayer: initializeHLSPlayer,
 		performSearch: performSearch,
+		trackProgress: trackVideoProgress,
 	};
 
 })();

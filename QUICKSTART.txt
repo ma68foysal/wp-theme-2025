@@ -1,0 +1,371 @@
+================================================================================
+BANTU PLUS SVOD - QUICK START GUIDE
+Get your Netflix-style platform running in 5 minutes
+================================================================================
+
+WHAT'S INCLUDED:
+================================================================================
+
+✓ Netflix-Style Homepage
+  - Featured video hero section
+  - Real-time search with dropdown results
+  - Category filters & sorting
+  - Responsive video grid with 20+ videos per page
+
+✓ Complete Member Dashboard  
+  - Watch history (100 most recent)
+  - Continue watching with progress bars
+  - Favorites management
+  - Settings & account management
+
+✓ Sticky Header with Navigation
+  - Logo & branding
+  - Menu links
+  - User profile dropdown
+  - Search integration
+
+✓ Responsive Design
+  - Desktop: 4 columns
+  - Tablet: 2-3 columns
+  - Mobile: 1-2 columns
+  - Touch-friendly interface
+
+✓ Advanced Features
+  - AJAX-powered search
+  - Video progress tracking
+  - Watch history recording
+  - Favorites system
+  - Mobile optimization
+
+
+INSTALLATION STEPS:
+================================================================================
+
+1. COPY THEME FILES
+   └─ All files already in /vercel/share/v0-project/
+
+2. CREATE PAGES IN WORDPRESS ADMIN:
+   
+   a) Homepage:
+      - Go to Settings > Reading
+      - Set "Front Page" to "Your Front Page"
+   
+   b) Dashboard Page:
+      - Create new page titled "Dashboard"
+      - Slug: dashboard
+      - Content: Leave blank (uses template)
+      - Publish
+   
+   c) Browse/Videos Page:
+      - Create new page titled "Browse"
+      - Slug: videos
+      - Publish
+
+3. CREATE NAVIGATION MENU:
+   - Go to Appearance > Menus
+   - Create new menu "Main Menu"
+   - Add items: Home, Browse, Dashboard (if logged in)
+   - Set location: Primary Menu
+
+4. ADD SAMPLE VIDEOS:
+   - Go to Videos > Add New
+   - Title: "Your Video Title"
+   - Set featured image (thumbnail)
+   - Select category: Action, Drama, Comedy, etc.
+   - Add meta: video_duration = "45:00" (format)
+   - Publish (repeat 5-10 times)
+
+5. CONFIGURE BUNNY.NET (in Admin):
+   - Go to Dashboard > BANTU Plus > Settings
+   - Enter Bunny.net API Key
+   - Enter Library ID
+   - Save
+
+6. CONFIGURE STRIPE (in Admin):
+   - Go to Dashboard > BANTU Plus > Settings
+   - Enter Stripe Public Key
+   - Enter Stripe Secret Key
+   - Enter Webhook Secret
+   - Save
+
+DONE! Your site is ready.
+
+
+FRONT-END WALKTHROUGH:
+================================================================================
+
+HOMEPAGE (/)
+────────────
+1. Hero Section at top
+   - Featured video (auto selects latest)
+   - Watch Now button
+   - More Info button
+
+2. Search & Filters
+   - Type to search (2+ chars)
+   - Select category from dropdown
+   - Choose sort option
+   - Click category pills for quick filter
+
+3. Video Grid
+   - 4 columns on desktop
+   - Hover to show play button
+   - Click to watch video
+   - Add to list button (right side)
+
+4. Recommended (for logged-in users)
+   - Personalized videos below grid
+   - Based on watch history
+
+
+DASHBOARD (/dashboard)
+──────────────────────
+1. Profile Header
+   - User avatar
+   - Display name & email
+   - Membership status & expiry
+   - Edit Profile & Sign Out buttons
+
+2. Four Tabs:
+   
+   Watch History
+   - All videos you've watched
+   - Sorted by most recent
+   - Shows watch date
+   - Click to rewatch
+   
+   Continue Watching
+   - In-progress videos only
+   - Shows % complete
+   - Resume from where you left off
+   
+   My Favorites
+   - Videos you've added to favorites
+   - Remove button on hover
+   - Manage your collection
+   
+   Settings
+   - Subscription info
+   - Profile management
+   - Download preferences
+   - Privacy controls
+   - Notifications
+   - Account deletion
+
+
+HEADER (on every page)
+──────────────────────
+- BANTU Plus logo (left)
+- Navigation menu (center)
+- Search icon toggle (mobile)
+- User dropdown menu (right)
+  └─ Avatar + name
+  └─ Profile, History, Favorites, Settings
+  └─ Sign Out
+
+
+USING THE SEARCH:
+================================================================================
+
+1. Type video title or keyword
+   - Minimum 2 characters
+   - Results appear instantly
+
+2. See results dropdown
+   - Shows thumbnail
+   - Video title
+   - Duration
+
+3. Click result
+   - Opens video page
+
+4. Or use category filters
+   - Select from dropdown
+   - Or click pill buttons
+   - Grid updates immediately
+
+
+MANAGING FAVORITES:
+================================================================================
+
+To Add:
+1. Hover over video card
+2. Click "+" button (top right)
+3. Added to favorites automatically
+
+To Remove:
+1. Go to Dashboard > My Favorites
+2. Hover over video
+3. Click X button
+4. Removed from list
+
+
+TRACKING PROGRESS:
+================================================================================
+
+Watch History:
+- Automatically recorded when video finishes
+- Shows in Dashboard > Watch History
+- Displays date watched
+
+Continue Watching:
+- Progress bar shows % complete
+- Updates every 2 seconds
+- Saved when you pause or exit
+- Resume from same spot next time
+
+
+TESTING FEATURES:
+================================================================================
+
+Feature                        How to Test
+─────────────────────────────  ──────────────────────────────────
+Search                         Type in search bar on homepage
+Filter by Category             Select category from dropdown
+Sort Videos                    Select "Popular" from sort menu
+Play Video                     Click play button on any card
+Watch History                  Watch a video, then go to Dashboard
+Continue Watching              Play video halfway, come back later
+Add to Favorites              Hover video, click + button
+Remove Favorite               Dashboard > Favorites, click X
+User Menu                      Click avatar in header
+Mobile Responsiveness          Resize browser or test on phone
+
+
+API ENDPOINTS (if using mobile app):
+================================================================================
+
+GET /wp-json/bantu/v1/videos
+- Get all videos with pagination
+- Parameters: page, per_page, category, sort
+
+GET /wp-json/bantu/v1/videos/{id}
+- Get single video details
+
+POST /wp-json/bantu/v1/auth/login
+- User login
+- Body: username, password
+
+GET /wp-json/bantu/v1/user/history
+- Get watch history (requires auth token)
+
+POST /wp-json/bantu/v1/user/progress
+- Save video progress (requires auth token)
+
+
+TROUBLESHOOTING:
+================================================================================
+
+Issue: Search not working
+Fix:
+1. Clear browser cache
+2. Check WordPress AJAX is enabled
+3. Verify nonce in console (F12 > Console)
+4. Check bantuAjax object exists
+
+Issue: Videos not showing on homepage
+Fix:
+1. Create Videos with featured images
+2. Add categories to videos
+3. Check video post type is enabled
+4. Clear WordPress cache
+
+Issue: Dashboard not accessible
+Fix:
+1. Create "Dashboard" page with slug /dashboard
+2. Check user is logged in
+3. Verify page is published
+
+Issue: Mobile not responsive
+Fix:
+1. Clear browser cache
+2. Hard refresh (Ctrl+F5)
+3. Check viewport meta tag in header
+4. Test on actual device (not just dev tools)
+
+Issue: User menu not showing
+Fix:
+1. Check header.php is being used
+2. Verify is_user_logged_in() function works
+3. Check avatar URL loading
+4. Clear browser cache
+
+
+CONFIGURATION OPTIONS:
+================================================================================
+
+In functions.php:
+
+Color Scheme (line 10-21):
+- Change --color-primary: #e50914; to your red
+- Change --color-background to your dark color
+- Other colors defined in :root
+
+Video Grid Items Per Page (front-page.php line 45):
+- Change posts_per_page to show more/fewer
+
+Progress Tracking Debounce (assets/js/bantu-plus.js line 90):
+- Change 2000 to milliseconds for save frequency
+
+Search Debounce (assets/js/bantu-plus.js line 45):
+- Change 300 to adjust search delay
+
+
+KEY FILE LOCATIONS:
+================================================================================
+
+Templates:
+  - front-page.php          (Homepage)
+  - page-dashboard.php      (Member Dashboard)
+  - single-video.php        (Video Player)
+  - header.php              (Site Header)
+  - archive-video.php       (Video Browse)
+
+Styles:
+  - assets/css/bantu-plus.css    (All styling)
+
+Scripts:
+  - assets/js/bantu-plus.js      (Frontend logic)
+
+Functions:
+  - functions.php           (Core setup)
+  - inc/membership-database.php
+  - inc/auth-shortcodes.php
+  - inc/stripe-payments.php
+  - inc/rest-api.php
+  - inc/admin-video-upload.php
+  - inc/bunny-settings.php
+
+
+NEXT STEPS:
+================================================================================
+
+1. Add your company logo (replace BANTU Plus text)
+2. Customize colors in CSS
+3. Upload your first videos
+4. Test subscription payment flow
+5. Set up analytics/tracking
+6. Configure email notifications
+7. Add DMCA/Copyright policies
+8. Test on mobile devices
+9. Go live!
+
+
+SUPPORT DOCUMENTS:
+================================================================================
+
+FEATURES-SUMMARY.txt       - Complete feature list
+IMPLEMENTATION-GUIDE.txt   - Detailed setup guide
+BANTU-PLUS-SETUP.md       - System architecture & database
+
+For questions:
+1. Check the documentation files above
+2. Review the inline code comments
+3. Check WordPress admin for any error logs
+4. Test with fresh browser cache
+
+
+================================================================================
+YOU'RE ALL SET!
+Start streaming like Netflix 🎬
+================================================================================
